@@ -45,6 +45,7 @@ crimes_with_rates <- crimes |> mutate(violent_rate = violent_crime_total/populat
 
 Write a few sentences about what you found in the data. What years had the highest crime rates? What years had the lowest crime rates? Does the pattern match your expectations?
 
+Violent crime rate had a big spike in the early 90s and it slightly coincides with an increase in property crime rates during the same time period. However, the violent crime rates reach beyond what they were in 1975 at the beginning of the data. The property crime rates do not exceed their 1975 number. Overall, both rates do decrease over the course of the last 45 years with violent crimes having a steady rate over the latest 10 years. The latest 2-3 years saw  a big drop off for the property crime rate. This does match my expectations because in recent years, alongside technological advancements, policing has become more strict and organized, allowing significantly less crimes to occur. The rise in a higher violent crime rate in the early 1990s may be do to the political climate at the time or perhaps the rise of the internet around that time, giving people more access to news and the goingson around the world.
 
 
 
