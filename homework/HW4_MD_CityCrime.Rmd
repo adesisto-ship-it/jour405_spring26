@@ -75,3 +75,27 @@ Most cities in Maryland saw at least a 50% decrease in property crime year over 
 ### Task 9: Save Your Work and Put it on GitHub
 
 Save this notebook, then commit it to your local repository. Push the changes to your GitHub repository and submit the URL for this file in ELMS.
+
+### Task 10: Percentiles
+
+
+```{r}
+md_cities_percentiles <- md_cities_rates |> mutate(percentile = ntile(violent_rate_2020, 100))
+  
+  
+```
+
+There are 11 cities above the 90th percentile.
+
+```{r}
+md_cities_percentiles |> summarize(
+  
+  IQR = IQR(violent_rate_2020)
+  
+  
+)
+```
+
+
+
+Yes, I think it changes the story idea a little bit because it helps compare where all of the cities are at. I still think it would be advantageous to look at another set of two years pre-covid to provide a nice comparison.
