@@ -74,7 +74,7 @@ summary(daily_calls$call_count)
 
 Let's visualize the time series of daily calls. What patterns do you see? If you had to draw horizontal lines that would highlight unusual days, where would those lines be?
 
-ANSWER HERE
+There was one day near Oct 2022 that had over 25 calls and certainly presents itself as an outlier. There is also a dip in the end of the data which is around winter time, showing that there are less drug overdoses in the wintertime
 
 ```{r daily-calls-plot}
 # Plot daily call volume
@@ -137,7 +137,7 @@ unusual_days |>
 
 Let's visualize these unusual days in the context of the full dataset. How do they differ from your answer on Task 3?
 
-ANSWER HERE
+I had noticed that there were 5 days where more than 20 calls were placed, but I visually thought those were the unusually high days. However, using the z scores, it shows that there are more days than those that would fit into the unusually high category.
 
 ```{r plot-unusual-days}
 # Create a clean factor for the plot legend
@@ -207,7 +207,7 @@ ggplot(dow_summary, aes(x = day_of_week, y = avg_calls)) +
 
 We can also calculate z-scores that account for the day of the week pattern. How would you describe the day with the highest z-score without using the term "z-score"?
 
-ANSWER HERE
+Tuesday, Oct 4 had the highest amount of calls over the course of the last year. This puts that particular days that there is a 5% chance for this number of calls to occur on a given day.
 
 ```{r day-of-week-z-scores}
 # Calculate day-of-week adjusted z-scores
@@ -298,5 +298,5 @@ top_outliers |> kable(digits = 2)
 
 Based on our z-score analysis, what are some potential angles for reporting? What would your next steps be and what would you tell an editor about your findings?
 
-ANSWER HERE
+Some next steps might be to start researching specific days. You could go through police reports to find out more information about what happened on those days. There is potential for a bad batch of drugs. If the police siezed any of these, perhaps there is a report on it and it can be correlated to the days with an abnormally high number of calls. Some angles for reporting might be to find if there are any trends in bad batches or to track where the drugs are coming from to discover whre specific the bad batch originated. 
 
