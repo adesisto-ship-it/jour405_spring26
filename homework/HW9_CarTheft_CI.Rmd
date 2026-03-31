@@ -170,7 +170,7 @@ Average car thefts per month sit at just 376 since 2023 with 95% confidence that
 
 2. Your editor says "Just tell me if car thefts are going up or down." Using only the confidence interval (no significance testing yet), what's the most accurate answer you can give? What would you need to do next to answer that question more definitively?
 
-I would say that it must be going down because of how much the confidence interval encapsulates, especially on the lower end. As I stated earlier, I would really like to see a trendline to get a more quantitative answer.
+I would say that it must be going down because of how much the confidence interval encapsulates, especially on the lower end. As I stated earlier, I would really like to see a trendline to get a more quantitative answer.q
 
 
 When you are finished, save your work, switch to GitHub Desktop, then add, commit and push your changes to GitHub and submit the URL of the notebook in ELMS.
