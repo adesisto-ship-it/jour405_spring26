@@ -1,0 +1,43 @@
+---
+title: "final_project"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+starlink_data <- read_table("https://planet4589.org/space/con/star/log.dat")
+
+starlink_data
+```
+
+I was able to load the table using your first suggestion! 
+
+HYPOHTESIS: My hypothesis is that more satellites in the constellation would lead to more frequent "downing" of satellites due to the fact that more satellites equals more opportunities for any single satellites to fail. There is also the potential that some of the downed satellites may relate to significant solar events or launch failures/anomalies which could be newsworthy as well.
+
+
+Data explanations as given by the source website (https://planet4589.org/space/con/star/log.html): 
+
+Sats: Total number of satellites launched.
+Failed to orbit (f): Launch vehicle failed to reach orbit.
+Down (F) Early deorbit: satellites which have reentered; determined to be malfunctioning before reaching operational orbit, and abandoned or actively lowered prior to reentry.
+Down (R) Disposal, later semicontrolled reentry: satellites which reached the operational orbit but whose orbits were later lowered to cause early reentry. These satellites retained propulsive capability but either failed in some other respect or were deliberately retired.
+Down (M) Reentry after fail; Later uncontrolled reentry: Reentered after an extended period of uncontrolled orbital decay; presumed failed.
+Total down: Total of satellites which were launched but are not currently in orbit.
+Total in orbit: Total of satellites which reached orbit and have not yet reentered, whether working or not.
+Screened (F): Satellites not working correctly and left in low orbit prior to completing orbit raising; expected to reenter soon. Includes satellites that failed at launch.
+Dead (M): Failed, uncontrolled decay. Satellites stopped stationkeeping after reaching operational orbit; no manuevers occurring, presumed failed.
+Graveyard (G): Graveyard orbit, retired. Not used for Starlink.
+Total working: Total of satellites still in orbit minus those thought failed (screened or uncontrolled decay).
+Retiring (R): Disposal. Orbit lowering to semicontrolled reentry underway
+Lowered (L): Out of con(stellation). Satellites which were operational but have been removed from the operational shell; still actively maneuvering.
+Anomalous (U): Satellites lowered to an intermediate orbit height but stationkeeping. I suspect these satellites are not fully operational, but not yet abandoned - perhaps SpaceX hopes to debug their problems.
+Reserve (T): Satellites maintained in an orbit close to the operational one, relocating in phase or temporarily out of the constellation. As of mid 2023 I am not bothering to mark T status most of the time for Starlink as a lot of satellites are popping in and out of this status on a daily basis.
+Special (S): Satellites making unusual manuevers, suspected to be being used for special tests.
+Drift (D): Satellites maintained at an intermediate altitude undergoing targeted orbital plane drift.
+Ascent (A): Satellites currently orbit raising towards operational altitude
+Op Shell (O): Satellites in one of the operational shells. 
+
+The data goes back to 2018 and goes to the present. Given that I am pulling from the website, we will assume it to be updated to the latest launch. The most important columns will be the 'sats' 'down' and 'dead'. Those are general the most encompassing portions of the data. But there is some other columns that include more parsed out data which may be interesting to discover later on. 
+
+QUESTION: I may ask something similar on the questions assingment, but im notcing that the data page has actual dates but that's not showing up here. Is that something that is wrong with the read_table? Other than that, I'ms working on understanding the letters and titles and will just need to keep track of it as I explore the data more.
+
