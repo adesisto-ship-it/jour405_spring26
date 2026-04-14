@@ -48,6 +48,21 @@ matches |>
 
 
 ### Task 6: Describe the results of both the correlation calculation and the scatterplot.
+The corellation is so close to 0 that there is essentially no correlation. The scatterplot shows the same since there is a nearly horizontal line and the data has no real relationship or trend in any direction.
 
+
+###Task 7: Choose another variable and repeat the steps in Tasks 4-5, then describe the result.
+
+```{r}
+matches |> summarize(correlation = cor(yellow_cards, goal_diff, method="pearson"))
+```
+```{r}
+matches |> 
+  ggplot() +
+  geom_point(aes(x=goal_diff, y=yellow_cards)) +
+  geom_smooth(aes(x=goal_diff, y=yellow_cards), method="lm")
+```
+
+There is ever so slightly more correlation compared to the fouls, but it is still extremely close to zero and therefore shows no actual correlation between yellow cards and the goals scored in a game.
 
 When you are done, save your work, switch to GitHub Desktop, then add, commit and push your changes to GitHub and submit the URL of the notebook in ELMS.
