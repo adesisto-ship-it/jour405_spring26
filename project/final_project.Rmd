@@ -3,12 +3,44 @@ title: "final_project"
 output: html_document
 ---
 
+List of potential analyses:
+1. scatterplot to see correlation of total number of satellites launches vs downed satellites 
+2. mean number of satellites launched per month and see if there are any outlier months. this will be interesting because we might have to figure out how to negate the increase in cadence
+3. frequency of new satellites added over time
+4.how often there is a downed satellite and the trend of downed satellites over time
+
+I'm not sure if there's more specific tests to run but those are generally what I think could help answer my hypothesis.
+
+Note: somehow I think the below code shifted the table to the left by one column. So the original 'Date' reads the 'Tot' column. I tried to investigate but I do believe I am clueless.
+
 ```{r}
 library(tidyverse)
-starlink_data <- read_table("https://planet4589.org/space/con/star/log.dat")
+raw <- read_lines("https://planet4589.org/space/con/star/log.dat")
+header_line <- raw[1]
+data_lines  <- raw[-1]
+
+# Pull off the trailing "YYYY Mon DD HHMM:SS"
+date_str <- str_trim(str_extract(data_lines, "\\d{4}\\s+[A-Za-z]{3}\\s+\\d{1,2}\\s+\\d{4}:\\d{2}\\s*$"))
+rest     <- str_remove(data_lines, "\\s+\\d{4}\\s+[A-Za-z]{3}\\s+\\d{1,2}\\s+\\d{4}:\\d{2}\\s*$")
+
+# Parse the numeric portion, then attach the date as a real Date column
+starlink_data <- read_table(I(c(header_line, rest))) |>
+  mutate(date = ymd(str_extract(date_str, "\\d{4}\\s+[A-Za-z]{3}\\s+\\d{1,2}")))
 
 starlink_data
 ```
+
+```{r}
+starlink_data <- starlink_data |> 
+  arrange(date) |> 
+  mutate(
+    new_sats   = `Date` - lag(`Date`),
+    new_down   = `Down` - lag(`Down`),  # adjust column name to whatever read_table assigns
+    new_dead   = `M` - lag(`M`)
+  )
+
+```
+
 
 I was able to load the table using your first suggestion! 
 
