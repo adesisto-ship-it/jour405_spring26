@@ -2,6 +2,84 @@
 title: "final_project"
 output: html_document
 ---
+```{r}
+library(tidyverse)
+library(lubridate)
+
+raw <- readLines("starlink_log.dat")
+
+data_lines <- raw |>
+  str_subset("^\\s*\\d+")
+
+starlink_data <- tibble(line = data_lines) |>
+  mutate(
+    row_num = str_extract(line, "^\\s*\\d+") |> as.numeric(),
+    Bin = str_extract(line, "^\\s*\\d+\\s+\\d+") |>
+      str_extract("\\d+$") |>
+      as.numeric(),
+    Date = str_extract(line, "\\d{4}\\s+[A-Za-z]{3}\\s+\\d{2}") |>
+      ymd(),
+    rest = str_remove(
+      line,
+      "^\\s*\\d+\\s+\\d+\\s+\\d{4}\\s+[A-Za-z]{3}\\s+\\d{2}\\s+"
+    )
+  ) |>
+  separate_wider_regex(
+    rest,
+    patterns = c(
+      Tot = "\\S+", "\\s+",
+      FTO = "\\S+", "\\s+",
+      FD = "\\S+", "\\s+",
+      RD = "\\S+", "\\s+",
+      MD = "\\S+", "\\s+",
+      Down = "\\S+", "\\s+",
+      Up = "\\S+"
+    ),
+    too_few = "align_start"
+  ) |>
+  mutate(across(c(row_num, Bin, Tot, FTO, FD, RD, MD, Down, Up), as.numeric))
+
+starlink_data
+
+
+```
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+readLines("starlink_log.dat", n = 20)
+```
+
+
+```{r}
+library(tidyverse)
+
+url <- "https://planet4589.org/space/con/star/log.dat"
+
+starlink_data <- read_fwf(
+  file = url,
+  skip = 2,
+  col_positions = fwf_widths(
+    c(4, 8, 5, 4, 4, 4, 4, 6, 4, 3, 3, 3, 6, 3, 3, 3, 3, 3, 3, 3, 3),
+    col_names = c(
+      "row_num","Bin","Date","Tot","FTO","FD","RD","MD",
+      "Down","Up","F","M","G","Work","R","L","U","T","S","D","A"
+    )
+  )
+)
+
+starlink_data
+```
+
+```{r}
+not_zeros <- data |> filter(new_sats != 0)
+```
+
+
+Note: use ChatGPT (https://chatgpt.com/share/69ee9b6e-e3bc-83ea-a5d1-bc28a9b4c644) to help me understand the code shift issue and change a bit of what you had done to get the table looking right! 
+
 
 List of potential analyses:
 1. scatterplot to see correlation of total number of satellites launches vs downed satellites 
@@ -15,26 +93,31 @@ Note: somehow I think the below code shifted the table to the left by one column
 
 ```{r}
 library(tidyverse)
+library(lubridate)
+
 raw <- read_lines("https://planet4589.org/space/con/star/log.dat")
-header_line <- raw[1]
-data_lines  <- raw[-1]
 
-# Pull off the trailing "YYYY Mon DD HHMM:SS"
-date_str <- str_trim(str_extract(data_lines, "\\d{4}\\s+[A-Za-z]{3}\\s+\\d{1,2}\\s+\\d{4}:\\d{2}\\s*$"))
-rest     <- str_remove(data_lines, "\\s+\\d{4}\\s+[A-Za-z]{3}\\s+\\d{1,2}\\s+\\d{4}:\\d{2}\\s*$")
+# Find the actual header row
+header_i <- which(str_detect(raw, "^\\s*#\\s+Bin\\s+Date\\s+Tot"))[1]
 
-# Parse the numeric portion, then attach the date as a real Date column
-starlink_data <- read_table(I(c(header_line, rest))) |>
-  mutate(date = ymd(str_extract(date_str, "\\d{4}\\s+[A-Za-z]{3}\\s+\\d{1,2}")))
+header_line <- raw[header_i] |>
+  str_remove("^\\s*#\\s*")
+
+data_lines <- raw[(header_i + 1):length(raw)]
+
+starlink_data <- read_table(
+  I(c(header_line, data_lines)),
+) |>
+  mutate(Date = ymd(Date))
 
 starlink_data
 ```
 
 ```{r}
 starlink_data <- starlink_data |> 
-  arrange(date) |> 
+  arrange(Date) |> 
   mutate(
-    new_sats   = `Date` - lag(`Date`),
+    new_sats   = `Tot` - lag(`Tot`),
     new_down   = `Down` - lag(`Down`),  # adjust column name to whatever read_table assigns
     new_dead   = `M` - lag(`M`)
   )
