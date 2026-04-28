@@ -9,7 +9,6 @@ Multiple regression analysis is a statistical method used to understand the rela
 
 ```{r setup}
 library(tidyverse)
-#install.packages('corrplot')
 library(corrplot)
 ```
 
@@ -26,7 +25,7 @@ teams <- read_csv("https://raw.githubusercontent.com/dwillis/jour405_files/main/
 Next, we construct a linear model to analyze how different factors like `Yards Gained`, `Takeaways`, and `Points Scored` influence the number of wins. This model helps us quantify the relationships and assess which factors are significant predictors of success.
 
 ```{r}
-model <- lm(Wins ~ `Yards Gained` + Takeaways + `Points Scored`, data = teams)
+model <- lm(Wins ~ `Giveaways` + Takeaways + `Points Scored`, data = teams)
 summary(model)
 ```
 
@@ -54,14 +53,14 @@ The coefficients tell us the estimated effect of each independent variable on th
 
 Is this a useful model, based on what you've seen? Why?
 
-ANSWER HERE
+This is a relatively useful model that I could use to predict the number of wins given the moderately high adjusted r-squared value.
 
 ## Correlation Analysis
 
 After building the model, we calculate the correlation matrix for our variables of interest. This matrix helps visualize the strength and direction of the relationships between each pair of variables.
 
 ```{r}
-selected_vars <- teams |>  select(`Yards Gained`, Takeaways, `Points Scored`, Wins)
+selected_vars <- teams |>  select(`Giveaways`, Takeaways, `Points Scored`, Wins)
 cor(selected_vars)
 ```
 
@@ -80,8 +79,10 @@ The results from our correlation analysis show the strength of the relationships
 
 Which of these three factors - Yards Gained, Takeaways and Points Scored - have the most impact on wins? Are there any that do not seem impactful at all?
 
-ANSWER HERE
+Points scored as the biggest impact on wins. Yards gained seem to have little impact, but there is definitely still some correlation between the two. I would not necessarily use the yards gained to predict wins since the points scored as a much better chance at predicting the wins outcome. 
 
 ## Using the Model (3 points)
 
 Without using the words "multiple regression model", describe how you could use this model to cover a team or game.
+
+I would probably try to explain how some factors have greater influence on a win outcome vs others. I could use, for example, the number of yards gained be each team and the points scored to predict whether one might win over another since they both have somewhat of an effect on the chance of a win.
