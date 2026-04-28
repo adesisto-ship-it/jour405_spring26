@@ -1,46 +1,95 @@
 ---
 title: "final_project"
 output: html_document
+DATA THROUGH APRIL 22, 2026
 ---
+
+The two issues I am running into after the tests are the error shown below with mismatching rows and the issue of it not counting all of the rows in the group in the second code block down. I'm not sure exactly what teh fix might be here but i suspect there's a way to make sure it counts each row. As for the below error, I'm sure there might also be a way to have it show 2018 and 2019 as 0, but again, not sure how to do that and I didn't get a chance to scour the internet. 
+
+
+
 ```{r}
-library(tidyverse)
-library(lubridate)
+by_year <- cbind(by_year_up, by_year_down)
 
-raw <- readLines("starlink_log.dat")
+by_year |>
+  ggplot(aes(x = `mean_new_sats`, y = `mean_only_down`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs( x="Total Starlink Satellites Launched", y="Satellites Not in Orbit", title = "Total launched Starlinks vs. Starlinks Not in Orbit", caption = "Jonathan McDowell, https://planet4589.org")
+```
 
-data_lines <- raw |>
-  str_subset("^\\s*\\d+")
+```{r}
+library(dplyr)
 
-starlink_data <- tibble(line = data_lines) |>
+by_year_up <- not_zeros %>% group_by(across(Year)) %>%
+  summarise(
+    mean_new_sats = mean(new_sats, na.rm = TRUE),
+    total_count_new = n(),
+    total_launch = sum(new_sats)
+  
+  )
+
+by_year_down <-  only_down %>% group_by(Year) %>%
+  summarize(
+    mean_only_down = mean(new_down, na.rm = TRUE),
+    total_count_down = n(),
+    total_down = sum(new_down)
+  )
+
+by_year_up
+by_year_down
+
+
+```
+
+Not sure why im not getting all of the rows accounted for. Used (https://builtin.com/data-science/grouping-r) for help on this.
+
+LINEAR REEGRESSION BELOW
+
+```{r}
+model <- lm(`Down` ~ `Tot`, data = starlink)
+summary(model)
+```
+I'm truly not sure how some of these numbers are meaning in this context. I can see that the adjusted R-squared is 0.9167 which shows a very strong correlation between the total satellites launched and the satellites not in orbit. This data is pulling from the totals, which is ok for this sort of plot. The p-value is super super low which shows that it is statistically significant, but I can't determine this coeficient and I'm not sure why its so low. I believe this shows the there is a large effect on the number of satellites down as the overall population increases. There is simply a high chance that any given satellite has an issue. What's interesting is the point that it sees a big spike in downed satellites just aver 7500 total. A few explanations for this could be that they started launching a new satellite variant which experianced more issues and then the started to figure out what the issue was, as indicated bt the flattening of the line again.
+
+```{r}
+starlink |>
+  ggplot(aes(x = `Tot`, y = `Down`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs( x="Total Starlink Satellites Launched", y="Satellites Not in Orbit", title = "Total launched Starlinks vs. Starlinks Not in Orbit", caption = "Jonathan McDowell, https://planet4589.org")
+```
+
+
+```{r}
+only_down <- starlink |> filter(new_down != 0)
+```
+
+```{r}
+starlink <- starlink |> 
+  arrange(Date) |> 
   mutate(
-    row_num = str_extract(line, "^\\s*\\d+") |> as.numeric(),
-    Bin = str_extract(line, "^\\s*\\d+\\s+\\d+") |>
-      str_extract("\\d+$") |>
-      as.numeric(),
-    Date = str_extract(line, "\\d{4}\\s+[A-Za-z]{3}\\s+\\d{2}") |>
-      ymd(),
-    rest = str_remove(
-      line,
-      "^\\s*\\d+\\s+\\d+\\s+\\d{4}\\s+[A-Za-z]{3}\\s+\\d{2}\\s+"
-    )
-  ) |>
-  separate_wider_regex(
-    rest,
-    patterns = c(
-      Tot = "\\S+", "\\s+",
-      FTO = "\\S+", "\\s+",
-      FD = "\\S+", "\\s+",
-      RD = "\\S+", "\\s+",
-      MD = "\\S+", "\\s+",
-      Down = "\\S+", "\\s+",
-      Up = "\\S+"
-    ),
-    too_few = "align_start"
-  ) |>
-  mutate(across(c(row_num, Bin, Tot, FTO, FD, RD, MD, Down, Up), as.numeric))
+    new_sats   = `Tot` - lag(`Tot`),
+    new_down   = `Down` - lag(`Down`),  # adjust column name to whatever read_table assigns
+    new_dead   = `M` - lag(`M`)
+  )
 
-starlink_data
+not_zeros <- starlink |> filter(new_sats != 0)
+```
 
+```{r}
+
+
+starlink <- read_table(
+  "starlink_log.dat",
+  comment = "#",
+  col_names = c("Bin", "Date", "Tot", "FTO", "FD", "RD", "MD", 
+                "Down", "Up", "F", "M", "G", "Work", "R", "L", 
+                "U", "T", "S", "D", "A", "O",
+                "Year", "Month", "Day", "Time")
+)
+
+starlink
 
 ```
 
@@ -78,7 +127,7 @@ not_zeros <- data |> filter(new_sats != 0)
 ```
 
 
-Note: use ChatGPT (https://chatgpt.com/share/69ee9b6e-e3bc-83ea-a5d1-bc28a9b4c644) to help me understand the code shift issue and change a bit of what you had done to get the table looking right! 
+Note: use ChatGPT (https://chatgpt.com/share/69ee9b6e-e3bc-83ea-a5d1-bc28a9b4c644) to help me understand the code shift issue and change a bit of what you had done to get the table looking right! (but it hasn't worked very well) 
 
 
 List of potential analyses:
@@ -86,6 +135,7 @@ List of potential analyses:
 2. mean number of satellites launched per month and see if there are any outlier months. this will be interesting because we might have to figure out how to negate the increase in cadence
 3. frequency of new satellites added over time
 4.how often there is a downed satellite and the trend of downed satellites over time
+5. linear regression of new sats vs down sats
 
 I'm not sure if there's more specific tests to run but those are generally what I think could help answer my hypothesis.
 
@@ -112,6 +162,8 @@ starlink_data <- read_table(
 
 starlink_data
 ```
+s
+
 
 ```{r}
 starlink_data <- starlink_data |> 
@@ -121,8 +173,9 @@ starlink_data <- starlink_data |>
     new_down   = `Down` - lag(`Down`),  # adjust column name to whatever read_table assigns
     new_dead   = `M` - lag(`M`)
   )
-
 ```
+
+
 
 
 I was able to load the table using your first suggestion! 
