@@ -1,6 +1,6 @@
 ---
 title: "Multiple Regression Analysis: Maryland Voter Turnout"
-name: "YOUR NAME HERE"
+name: "Austin DeSisto"
 ---
 
 # Introduction
@@ -26,7 +26,7 @@ head(md_turnout)
 
 Before building our model, let's explore the data to understand the variables and their relationships. Examine the correlation matrix to see how the independent variables relate to each other and to the dependent variable (voter turnout). Which variables seem to be correlated? Are there any that are not correlated at all? Also look at the multiple scatterplots. Which variables seem to have a linear relationship with the dependent variable? Which do not?
 
-ANSWER HERE
+The variables with the highest relationship to voter turnout seem to be unemployed percentage and white percentage. Other related variables are bachelors and income. The scatterplots shows a relatively strong relationship between turnout are the percentage white and the percentage unemployed, which matches the correlated values. Income does not seem to show a very strong relationship with voter turnout, according to the scatterplot. 
 
 
 ```{r}
@@ -89,7 +89,7 @@ The coefficients tell us the estimated effect of each independent variable on th
 
 Examine the output of the model, checking the coefficients, residuals, and overall model fit. How well does this multiple variable model predict turnout? Do any of the variables seem to be insignificant? Is this a useful model, based on what you've seen? Why?
 
-ANSWER HERE
+Overall, the model seems pretty useful. The adjusted r-squared value is 80%, showing that most of the variables have a high effect on the voter turnout. The p-value, however, is rather high which means that some of these variables might not be super statstically significant. I think that income is one, given its very veyr high estimate. Pct white, however, seems very strong given it's proximity to one. 
 
 ```{r}
 # Build initial model with all predictors
@@ -103,19 +103,22 @@ summary(initial_model)
 
 Create three alternative models by adding or removing variables to see if we can improve the model's performance. Turnout will always be the dependent variable, but you should alter the independent variables by removing or adding some. Then compare the models using adjusted R-squared values. Are any of the models significantly better than the others?
 
-ANSWER HERE
+Somehow the adjusted r-squared values are all rather similar. There is a slight advantage in model 2, which I expected. I thought I was removing some of the variables that I thought were less correlated, but maybe they were playing more of a role than the original scatterplots led me to believe.
 
 ```{r}
 # Model 2
-model2 <- lm(turnout ~ REPLACE ME, data = md_turnout)
+model2 <- lm(turnout ~ pct_bachelors_higher + 
+                   pct_unemployed + pct_white, data = md_turnout)
 summary(model2)
 
 # Model 3
-model3 <- lm(turnout ~ REPLACE ME, data = md_turnout)
+model3 <- lm(turnout ~ population + pct_bachelors_higher + 
+                   pct_unemployed +  pct_white, data = md_turnout)
 summary(model3)
 
 # Model 4
-model4 <- lm(turnout ~ REPLACE ME, data = md_turnout)
+model4 <- lm(turnout ~ population + pct_bachelors_higher + 
+                   pct_unemployed + pct_white, data = md_turnout)
 summary(model4)
 
 # Compare models
@@ -144,4 +147,4 @@ ggplot(model_comparison, aes(x = reorder(Model, Adjusted_R_squared), y = Adjuste
 
 Without using the words "multiple regression model", describe how you could use this analysis to cover an election or voter participation story.
 
-ANSWER HERE
+I could compare how related each variable is to the voter turnout to predict how a given town/county may vote given it's position on these scatterplots. For example, we might be able to predict that given the high percentage of white people in a given town, there might be a higher voter turnout in the next election. This does not account for other potential variables such as who the candidates are or even the approval rating of a given candidate, which might also effect voter turnout.
