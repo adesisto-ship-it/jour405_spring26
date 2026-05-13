@@ -1,184 +1,7 @@
 ---
 title: "final_project"
 output: html_document
-DATA THROUGH APRIL 22, 2026
 ---
-
-The two issues I am running into after the tests are the error shown below with mismatching rows and the issue of it not counting all of the rows in the group in the second code block down. I'm not sure exactly what teh fix might be here but i suspect there's a way to make sure it counts each row. As for the below error, I'm sure there might also be a way to have it show 2018 and 2019 as 0, but again, not sure how to do that and I didn't get a chance to scour the internet. 
-
-
-
-```{r}
-by_year <- cbind(by_year_up, by_year_down)
-
-by_year |>
-  ggplot(aes(x = `mean_new_sats`, y = `mean_only_down`)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE, color = "red") +
-  labs( x="Total Starlink Satellites Launched", y="Satellites Not in Orbit", title = "Total launched Starlinks vs. Starlinks Not in Orbit", caption = "Jonathan McDowell, https://planet4589.org")
-```
-
-```{r}
-library(dplyr)
-
-by_year_up <- not_zeros %>% group_by(across(Year)) %>%
-  summarise(
-    mean_new_sats = mean(new_sats, na.rm = TRUE),
-    total_count_new = n(),
-    total_launch = sum(new_sats)
-  
-  )
-
-by_year_down <-  only_down %>% group_by(Year) %>%
-  summarize(
-    mean_only_down = mean(new_down, na.rm = TRUE),
-    total_count_down = n(),
-    total_down = sum(new_down)
-  )
-
-by_year_up
-by_year_down
-
-
-```
-
-Not sure why im not getting all of the rows accounted for. Used (https://builtin.com/data-science/grouping-r) for help on this.
-
-LINEAR REEGRESSION BELOW
-
-```{r}
-model <- lm(`Down` ~ `Tot`, data = starlink)
-summary(model)
-```
-I'm truly not sure how some of these numbers are meaning in this context. I can see that the adjusted R-squared is 0.9167 which shows a very strong correlation between the total satellites launched and the satellites not in orbit. This data is pulling from the totals, which is ok for this sort of plot. The p-value is super super low which shows that it is statistically significant, but I can't determine this coeficient and I'm not sure why its so low. I believe this shows the there is a large effect on the number of satellites down as the overall population increases. There is simply a high chance that any given satellite has an issue. What's interesting is the point that it sees a big spike in downed satellites just aver 7500 total. A few explanations for this could be that they started launching a new satellite variant which experianced more issues and then the started to figure out what the issue was, as indicated bt the flattening of the line again.
-
-```{r}
-starlink |>
-  ggplot(aes(x = `Tot`, y = `Down`)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE, color = "red") +
-  labs( x="Total Starlink Satellites Launched", y="Satellites Not in Orbit", title = "Total launched Starlinks vs. Starlinks Not in Orbit", caption = "Jonathan McDowell, https://planet4589.org")
-```
-
-
-```{r}
-only_down <- starlink |> filter(new_down != 0)
-```
-
-```{r}
-starlink <- starlink |> 
-  arrange(Date) |> 
-  mutate(
-    new_sats   = `Tot` - lag(`Tot`),
-    new_down   = `Down` - lag(`Down`),  # adjust column name to whatever read_table assigns
-    new_dead   = `M` - lag(`M`)
-  )
-
-not_zeros <- starlink |> filter(new_sats != 0)
-```
-
-```{r}
-
-
-starlink <- read_table(
-  "starlink_log.dat",
-  comment = "#",
-  col_names = c("Bin", "Date", "Tot", "FTO", "FD", "RD", "MD", 
-                "Down", "Up", "F", "M", "G", "Work", "R", "L", 
-                "U", "T", "S", "D", "A", "O",
-                "Year", "Month", "Day", "Time")
-)
-
-starlink
-
-```
-
-
-```{r}
-library(tidyverse)
-library(lubridate)
-
-readLines("starlink_log.dat", n = 20)
-```
-
-
-```{r}
-library(tidyverse)
-
-url <- "https://planet4589.org/space/con/star/log.dat"
-
-starlink_data <- read_fwf(
-  file = url,
-  skip = 2,
-  col_positions = fwf_widths(
-    c(4, 8, 5, 4, 4, 4, 4, 6, 4, 3, 3, 3, 6, 3, 3, 3, 3, 3, 3, 3, 3),
-    col_names = c(
-      "row_num","Bin","Date","Tot","FTO","FD","RD","MD",
-      "Down","Up","F","M","G","Work","R","L","U","T","S","D","A"
-    )
-  )
-)
-
-starlink_data
-```
-
-```{r}
-not_zeros <- data |> filter(new_sats != 0)
-```
-
-
-Note: use ChatGPT (https://chatgpt.com/share/69ee9b6e-e3bc-83ea-a5d1-bc28a9b4c644) to help me understand the code shift issue and change a bit of what you had done to get the table looking right! (but it hasn't worked very well) 
-
-
-List of potential analyses:
-1. scatterplot to see correlation of total number of satellites launches vs downed satellites 
-2. mean number of satellites launched per month and see if there are any outlier months. this will be interesting because we might have to figure out how to negate the increase in cadence
-3. frequency of new satellites added over time
-4.how often there is a downed satellite and the trend of downed satellites over time
-5. linear regression of new sats vs down sats
-
-I'm not sure if there's more specific tests to run but those are generally what I think could help answer my hypothesis.
-
-Note: somehow I think the below code shifted the table to the left by one column. So the original 'Date' reads the 'Tot' column. I tried to investigate but I do believe I am clueless.
-
-```{r}
-library(tidyverse)
-library(lubridate)
-
-raw <- read_lines("https://planet4589.org/space/con/star/log.dat")
-
-# Find the actual header row
-header_i <- which(str_detect(raw, "^\\s*#\\s+Bin\\s+Date\\s+Tot"))[1]
-
-header_line <- raw[header_i] |>
-  str_remove("^\\s*#\\s*")
-
-data_lines <- raw[(header_i + 1):length(raw)]
-
-starlink_data <- read_table(
-  I(c(header_line, data_lines)),
-) |>
-  mutate(Date = ymd(Date))
-
-starlink_data
-```
-s
-
-
-```{r}
-starlink_data <- starlink_data |> 
-  arrange(Date) |> 
-  mutate(
-    new_sats   = `Tot` - lag(`Tot`),
-    new_down   = `Down` - lag(`Down`),  # adjust column name to whatever read_table assigns
-    new_dead   = `M` - lag(`M`)
-  )
-```
-
-
-
-
-I was able to load the table using your first suggestion! 
 
 HYPOHTESIS: My hypothesis is that more satellites in the constellation would lead to more frequent "downing" of satellites due to the fact that more satellites equals more opportunities for any single satellites to fail. There is also the potential that some of the downed satellites may relate to significant solar events or launch failures/anomalies which could be newsworthy as well.
 
@@ -207,5 +30,161 @@ Op Shell (O): Satellites in one of the operational shells.
 
 The data goes back to 2018 and goes to the present. Given that I am pulling from the website, we will assume it to be updated to the latest launch. The most important columns will be the 'sats' 'down' and 'dead'. Those are general the most encompassing portions of the data. But there is some other columns that include more parsed out data which may be interesting to discover later on. 
 
-QUESTION: I may ask something similar on the questions assingment, but im notcing that the data page has actual dates but that's not showing up here. Is that something that is wrong with the read_table? Other than that, I'ms working on understanding the letters and titles and will just need to keep track of it as I explore the data more.
+QUESTION: I may ask something similar on the questions assingment, but im notcing that the data page has actual dates but that's not showing up here. Is that something that is wrong with the read_table? Other than that, I'ms working on understanding the letters and titles and will just need to keep track of it as I explore the data more. -> we fixed this! but I wanted to leave it in there to show what one of the biggest struggles was.
+
+# Loading and Interpretting the Data
+
+First we will load the tidyverse and lubridate libraries to help us parse through the data. This data is a bit tricky because of how the date is formatted and so the first part gives us sepcific column names to spread out the dates. Given that the stats are shown as totals, we then add columns which will show us only the added values for each column. Using the 'all_years' table, we can then group the data and their totals by each year so help study regression and other stats. All of this is done in this initial code block to have a descriptive start to begin parsing the data. It sets up the data for us to process how we want to.
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+starlink_data <- read_table(
+  "https://planet4589.org/space/con/star/log.dat",
+  comment = "#",
+  col_names = c("bin","date","tot","fto","fd","rd","md",
+                "down","up","f","m","g","work","r","l","u",
+                "t","s","d","a","o","year","month","day","time")
+) |>
+  arrange(date) |>
+  mutate(
+    new_sats = tot  - lag(tot),
+    new_down = down - lag(down),
+    new_dead = m    - lag(m)
+  )
+
+all_years <- tibble(year = 2018:2026)
+
+by_year_up <- starlink_data |>
+  group_by(year) |>
+  summarise(
+    mean_new_sats = mean(new_sats[new_sats != 0], na.rm = TRUE),
+    total_launch  = sum(new_sats, na.rm = TRUE),
+    n_launch_days = sum(new_sats != 0, na.rm = TRUE)
+  )
+
+by_year_down <- starlink_data |>
+  group_by(year) |>
+  summarise(
+    mean_new_down = mean(new_down[new_down != 0], na.rm = TRUE),
+    total_down    = sum(new_down, na.rm = TRUE),
+    n_down_days   = sum(new_down != 0, na.rm = TRUE)
+  )
+
+by_year <- all_years |>
+  left_join(by_year_up,   by = "year") |>
+  left_join(by_year_down, by = "year") |>
+  mutate(across(c(total_launch, n_launch_days, total_down, n_down_days),
+                ~ replace_na(.x, 0)))
+```
+# Given the above work, here are some potential analyses we can do:
+
+1. scatterplot to see correlation of total number of satellites launches vs downed satellites 
+2. mean number of satellites launched per month and see if there are any outlier months. this will be interesting because we might have to figure out how to negate the increase in cadence
+3. frequency of new satellites added over time
+4.how often there is a downed satellite and the trend of downed satellites over time
+5. linear regression of new sats vs down sats
+
+# LINEAR REEGRESSION BELOW
+
+We first start with a visualization of the total number of satellites launched vs how many are down. 
+
+
+```{r}
+starlink_data |>
+  ggplot(aes(x = `tot`, y = `down`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs( x="Total Starlink Satellites Launched", y="Satellites Not in Orbit", title = "Total launched Starlinks vs. Starlinks Not in Orbit", caption = "Jonathan McDowell, https://planet4589.org")
+```
+Given this visual, we can clearly see that as more satellites are added to the constellation, more satellites are marked as "Not in Orbit". This can be because they are down and does not include dead satellites that have not deorbited yet. It clearly shows a strong upward trend that supports the hypothesis that more satellites = more downed satellites. 
+
+# Getting the Numbers
+
+To get a more precise understanding of exactly how related these two are, we can look at a linear regression model. Below is a model that compares the total satellites with the number of downed satellites.
+
+```{r}
+model <- lm(`down` ~ `tot`, data = starlink_data)
+summary(model)
+```
+I can see that the adjusted R-squared is 0.9167 which shows a very strong correlation between the total satellites launched and the satellites not in orbit. The p-value is super super low which shows that it is statistically significant. I believe this shows the there is a large effect on the number of satellites down as the overall population increases. There is simply a high chance that any given satellite has an issue. What's interesting is the point that it sees a big spike in downed satellites just aver 7500 total. A few explanations for this could be that they started launching a new satellite variant which experienced more issues and then the started to figure out what the issue was, as indicated by the flattening of the line again. The coefficient does show that there is a very small number of satellites that will go down compared to the total poulation, but because it is positive, it affirms that when more satellites are added, more will go down.
+
+# Understanding Frequency of Launch
+
+It would also be helpful to get an understanding of how the satellites launched per year looks over the life of the constellation. We can do this by investigating the total number od launches per year through the 'by_year' tables we made in the beginning and getting the mean and standard deviation.
+
+```{r}
+by_year  |> summarize ( mean = mean(total_launch), sd = sd(total_launch))
+```
+
+```{r}
+
+by_year_up
+by_year_down
+by_year
+
+```
+# Analysis
+
+Given the above two code blocks we can see how unusual this data is. My prior background knowledge comes in to explain why one SD is so large and, more specifically, why the mean_new_sats for each years tends to decrease. Typically, you would expect with an incresing launch cadence, you would observe an increase in the mean number of satellites launched in a given year. For this case however, Starlink satellites got a major upgrade in 2023, making them much larger (and therefore more capable). This size increase meant that less satellites would be launched per launch.
+
+So despite a record number of launches occuring in 2025 (112), the average new satellites launched is onlt 28.6 compared to the year with about half the launches (2023 at 63) and on average 3 more satellites launched per launch. 
+
+# Standard Error 
+
+To further investigate just how all over the place these launches are, we can look at the standard error to see how much the mean number of satellites launched each year varies.
+
+```{r}
+starlink_error <- by_year |>  summarise (mean = mean(total_launch), 
+                                         sd = sd(total_launch),
+                                         year=n(),
+                                         se_starlink = sd / sqrt(9),
+                margin_error = qt(0.975, df = year - 1) * se_starlink)
+
+starlink_error
+```
+# Analysis
+
+As you can see, the SE is 336.3! Of course, the SE shows us how much a sample mean could vary, but I wanted to use it to see how much this mean varies. As stated above, it varied for multiple reasons. One of which being the increase in satellite size and the other being cadence. These sort of counteract each other, again as we saw in the frequency of launch code block. 
+
+# Multiple Regression
+
+I want to compare one more factor to round it back to the original hypothesis. We already saw a strong correlation between total satellites launched and down satellites, but what about pure number of launches and down satellites? The idea here is to eliminate the number of satellites factor and just focus on the overall launches, independent of how many satellites the launched. We will compare these different factors with a multiple regression.
+
+```{r}
+multiple_regression <- lm(total_down ~ n_launch_days + total_launch + mean_new_sats, data = by_year)
+summary(multiple_regression)
+```
+# Analysis
+
+This is interesting! The adjusted r-squared is 72% which is decently high an expected. In order for satellites to go down, you have to launch them. Starting with launch days, it clearly doesn't work as a great predictor because you are unsure about the number of satellites on a given launch, but it does at least show that there is an increased chance. Total_launch still stands as a descent predictor, but when grouped by year, doesn't show the full picture. Part of this is because some years saw more satellites down with less satellites launched and vise versa. For the mean new sats, it makes sense that there is a positive slight trend over each year, but again, grouping by year makes this harder to get an accurate prediction on.
+
+# PART 4: Story Pitch and more journalism!
+
+
+I really think this is a good start to a story, but there is so much more context that is needed. The figure alone stating that over 1600 starlink satellites have been "downed" is a good start to a story discussing all of the reasons the number and frequency is the way it is.
+
+Throughout this data exploration, I have found that there is indeed a strong correlation between the number of satellites launched and the number of satellites that stop working. The visualization is a helpful tool to understand the variations in satellites launched and satellites downed. It gives us a start to begin investigating the changes in satellite structure and launch frequency which can explain the variations. Bigger satellites and newer hardware are reasons for increased issues and a lower number of satellites launched per year on average. We have also seen an interesting trend in the number of satellites launched year over year.
+
+A major problem is this reporting is that these satellites are still launched very frequently, so it's hard to make a concise and conclusive report before the constellation is finished (which won't be for many more years). In fact, since I started this project 5 ish weeks ago, there has been 13 launches adding just under 400 satellites. At least one or two of those should fail, given my findings. This is a fun reporting fact and I can use the linear regression model to help predict these things in the reporting, but keeping up would be hard. 
+
+As far as a plan goes, maybe we could wait until the end of the calendar year and write up a report on what we have to far and try to extrapolate based on the data we have already and then see where it could go. Most of the reporting will be trying to understand the aforementioned changes to structure and eventually launch vehicle with the upcoming Starship rocket which can launch 100 satellites be launch, instead of 30. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
